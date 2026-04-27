@@ -1,191 +1,93 @@
-# Kinnect 🤝
-### *Stay close to those you love*
+# Kinnect 🌿
 
-> **Inspired by Sparsh (स्पर्श)** — the Sanskrit word for *touch*.  
-> Built by **Prithvvi** — Grade 11, Abbey Park High School, Oakville, Ontario.
+> **Connecting elderly residents with their families** — a real-time web app built for care homes.
 
----
-
-## 🌟 Why I Built This
-
-While volunteering at a senior care home in Oakville, I noticed something that stayed with me.
-
-The elderly residents weren't struggling because of health problems. They were struggling because they felt *disconnected* — from their families, from daily life, from the people who loved them. Family members wanted to stay in touch, but smartphones were confusing for elderly users. Nurses spent time on phone calls that a simple app could handle. And residents went days without hearing from their families — not because families didn't care, but because there was no easy bridge between them.
-
-I built **Kinnect** to be that bridge.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=flat-square&logo=vercel)](https://kinnect-web.vercel.app)
+[![Built with React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)](https://typescriptlang.org)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
 
 ---
 
-## 📱 What is Kinnect?
+## What is Kinnect?
 
-Kinnect is a **compassionate connectivity app** designed for three groups of people:
+Kinnect is a three-sided platform that bridges the gap between elderly care home residents, their families, and care home staff.
 
-| User | What they get |
-|------|--------------|
-| 👴 **Elderly Residents** | One-tap family calls, daily mood check-in, family photo stream, voice messages |
-| 👨‍👩‍👧 **Family Members** | Real-time mood updates, photo sharing, voice notes, activity feed |
-| 👩‍⚕️ **Care Home Staff** | Resident mood dashboard, alerts, weekly reports, roster management |
+Inspired by volunteering at a local old age home in Oakville, I noticed residents feeling disconnected from their families — not from lack of love, but from lack of easy, accessible connection. Kinnect solves this.
 
----
+### Three views, one purpose
 
-## ✨ Key Features
-
-### For Residents
-- **One-tap call button** — giant, pulsing, impossible to miss. One tap connects to family instantly
-- **Daily mood check-in** — three simple emoji faces. Family notified automatically
-- **Family photo stream** — family shares photos of daily life. Resident sees them without doing anything
-- **Voice messages** — hear a loved one's voice any time, no typing required
-- **Memory journal** — staff records short stories from residents, preserved for families
-
-### For Families
-- **Live mood dashboard** — see how your loved one is feeling today, right now
-- **One-tap photo sharing** — share a photo from your phone in seconds
-- **Voice note recorder** — record a message that plays on the resident's tablet
-- **Activity feed** — see every call, photo, and check-in in one place
-
-### For Care Home Staff
-- **Morning mood overview** — bar chart of all residents' moods at a glance
-- **Smart alerts** — residents who are sad, haven't checked in, or have birthdays coming
-- **Resident roster** — every resident's mood and connection status in one screen
-- **Staff quick actions** — group messages, activity scheduling, weekly reports
-- **Weekly engagement reports** — track which residents are most and least connected
+| View | Who uses it | Core function |
+|------|------------|---------------|
+| **Resident** | Elderly residents | One-tap family call, daily mood check-in, view family photos & voice messages |
+| **Family** | Sons, daughters, grandchildren | See live mood updates, share photos/voice notes, video call with one tap |
+| **Staff** | Nurses, care managers | Monitor all residents, receive alerts, generate weekly reports |
 
 ---
 
-## 🛠️ Tech Stack
+## Tech stack
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
-| Frontend | HTML5 / CSS3 / Vanilla JS | Accessible on any device, no installation needed |
-| Styling | Custom CSS with design system | Fast, lightweight, works on older tablets |
-| Backend *(coming)* | Firebase Firestore | Real-time sync, free tier, no server needed |
-| Auth *(coming)* | Firebase Authentication | Secure family + staff login |
-| Hosting *(coming)* | Vercel | Free, instant deployment |
+| Frontend | React 18 + TypeScript | Industry standard, type-safe, co-op employer expectation |
+| Styling | Tailwind CSS | Mobile-first, fast iteration, consistent design tokens |
+| Animations | Framer Motion | Production-quality micro-interactions |
+| Backend | Supabase | PostgreSQL + Auth + Realtime + Storage — all in one |
+| Deployment | Vercel | Instant deploys from GitHub, free tier |
+| Video calling | Daily.co (Phase 6) | WebRTC video, 5-line integration |
 
 ---
 
-## 🗺️ Project Roadmap
+## Getting started
 
-- [x] **Phase 1** — UI Design & Prototype (HTML/CSS/JS)
-  - [x] Resident home screen
-  - [x] Family dashboard
-  - [x] Staff management dashboard
-  - [x] 3-view navigation with tab bar
-- [ ] **Phase 2** — Firebase Backend Integration
-  - [ ] Mood check-ins saved to Firestore database
-  - [ ] Real-time mood updates pushed to family view
-  - [ ] Photo upload and storage
-- [ ] **Phase 3** — Voice Messages
-  - [ ] Record and store voice messages
-  - [ ] Playback on resident device
-- [ ] **Phase 4** — Authentication & Multi-resident Support
-  - [ ] Staff login with care home code
-  - [ ] Family login linked to specific resident
-  - [ ] Multiple residents per care home
-- [ ] **Phase 5** — Pilot at Oakville Care Home
-  - [ ] Deploy on tablet in common room
-  - [ ] Onboard 5–10 residents
-  - [ ] Collect feedback and iterate
-
----
-
-## 🖥️ Screenshots
-
-### Resident View (Teal)
-Designed for elderly users — large text, one big button, zero confusion.
-
-### Family View (Amber)  
-Warm and informative — real-time mood, quick actions, full activity history.
-
-### Staff Dashboard (Dark Slate)
-Professional tools — mood analytics, smart alerts, resident roster, quick actions.
-
-> *Screenshots coming as development progresses*
-
----
-
-## 🚀 Getting Started
-
-### Run locally (current prototype)
 ```bash
-# Clone the repository
-git clone https://github.com/[your-username]/kinnect.git
+# Clone the repo
+git clone https://github.com/Prithvvi/kinnect-web.git
+cd kinnect-web
 
-# Open the prototype
-open kinnect_complete.html
-# or just drag the file into any web browser
-```
+# Install dependencies
+npm install
 
-### No installation needed for the prototype.
-The current version runs entirely in the browser with no dependencies.
+# Set up environment variables
+cp .env.example .env
+# Fill in your Supabase URL and anon key
 
----
-
-## 📁 Project Structure
-
-```
-kinnect/
-│
-├── kinnect_complete.html     # Full 3-view prototype (resident + family + staff)
-├── README.md                 # This file
-│
-├── docs/
-│   ├── wireframes/           # Initial wireframe sketches
-│   └── user-research/        # Notes from care home visits
-│
-└── src/                      # Coming in Phase 2
-    ├── components/
-    ├── firebase/
-    └── styles/
+# Start development server
+npm run dev
 ```
 
 ---
 
-## 💡 Design Philosophy
+## Project structure
 
-> *"I named it Kinnect because every Canadian senior should immediately understand what it does. But its soul is Sparsh — a Sanskrit word meaning touch. Because what elderly residents miss most isn't video quality or features. It's the feeling of being touched by someone they love."*
-
-**Three design principles:**
-
-1. **Elderly-first** — If a 78-year-old with no tech experience can't use it in 30 seconds, it's not done
-2. **Family-second** — If busy families find it inconvenient, they won't use it — and residents lose out
-3. **Staff-third** — If staff find it adds to their workload instead of reducing it, it won't last
-
----
-
-## 📊 Problem Statement
-
-According to research on senior care in Canada:
-- **60%** of nursing home residents report feeling lonely on a daily basis
-- Families average fewer than **2 visits per month** due to distance and busy schedules
-- Most care homes rely on **phone calls and paper forms** to track resident wellbeing
-
-Kinnect addresses all three gaps with one simple, compassionate product.
+```
+src/
+├── views/          # The 3 main views (Resident, Family, Staff)
+├── components/
+│   ├── layout/     # Header, BottomNav
+│   └── shared/     # MoodRow, VoiceCard, CallButton
+├── lib/            # Supabase client
+└── types/          # TypeScript interfaces
+```
 
 ---
 
-## 🙏 Acknowledgements
+## Roadmap
 
-This project was born at a senior care home in Oakville, Ontario, where I volunteer.  
-Thank you to the residents who inspired it, and to the staff who showed me what real care looks like.
-
-The name **Kinnect** comes from the word *connect* — with a K for *kin*, meaning family.  
-The soul of the app is **Sparsh (स्पर्श)** — Sanskrit for *touch* — because that is what this app is really trying to give back to people who miss it.
-
----
-
-## 📬 Contact
-
-**Prithvvi**  
-Grade 11 — Abbey Park High School, Oakville, Ontario  
-GitHub: [@prithvvi](https://github.com/prithvvi)
+- [x] Phase 0 — Project setup + Vercel deployment
+- [x] Phase 1 — Design system + static UI (all 3 views)
+- [ ] Phase 2 — Authentication + role-based routing
+- [ ] Phase 3 — Real-time mood tracking
+- [ ] Phase 4 — Family features (photos, voice, messages)
+- [ ] Phase 5 — Staff dashboard with alerts
+- [ ] Phase 6 — Video calling (Daily.co)
+- [ ] Phase 7 — Polish, PWA, production launch
 
 ---
 
-*"The best engineering solves human problems, not technical ones."*
+## Built by
 
----
+**Prithvvi** — Grade 11 student at Abbey Park High School, Oakville.
+Targeting Computer Science / Engineering at University of Waterloo and University of Toronto.
 
-![Built with heart](https://img.shields.io/badge/built%20with-%E2%9D%A4%EF%B8%8F-red)
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
-![Made in Canada](https://img.shields.io/badge/made%20in-Canada%20🍁-red)
+*Inspired by Sparsh · स्पर्श · touch*
