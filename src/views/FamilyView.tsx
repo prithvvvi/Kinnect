@@ -1,9 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import Header, { LiveBadge } from '../components/layout/Header'
-import type { ActivityItem } from '../types'
+import { supabase } from '../lib/supabase'
+import type { ActivityItem, Mood } from '../types'
 
-// ── Static sample data (replaced by Supabase in Phase 3–4) ─────────────────
 const ACTIVITY: ActivityItem[] = [
   { id:'1', icon:'📞', iconBg:'bg-teal-light',  title:'Video call — 18 minutes', subtitle:'Yesterday at 6:30 pm', ago:'1d' },
   { id:'2', icon:'📷', iconBg:'bg-amber-light', title:'3 photos shared by Priya', subtitle:'Morning walk · Lunch · Weekend', ago:'Today' },
@@ -11,7 +10,6 @@ const ACTIVITY: ActivityItem[] = [
   { id:'4', icon:'📖', iconBg:'bg-slate-light', title:'Memory recorded by staff', subtitle:"Margaret's garden story · 1:45", ago:'3d' },
 ]
 
-// ── Quick action button ───────────────────────────────────────────────────────
 function QuickBtn({ emoji, label, colorClass, onClick }: {
   emoji: string; label: string; colorClass: string; onClick: () => void
 }) {
@@ -29,7 +27,6 @@ function QuickBtn({ emoji, label, colorClass, onClick }: {
   )
 }
 
-// ── Activity row ──────────────────────────────────────────────────────────────
 function ActivityRow({ item }: { item: ActivityItem }) {
   return (
     <motion.div
@@ -48,46 +45,125 @@ function ActivityRow({ item }: { item: ActivityItem }) {
   )
 }
 
-// ── Main FamilyView ───────────────────────────────────────────────────────────
-export default function FamilyView() {
+interface FamilyViewProps {
+  residentId: string
+}
+
+export default function FamilyView({ residentId }: FamilyViewProps) {
+  const [currentMood, setCurrentMood] = useState<Mood | null>(null)
+
+  // Load current mood and subscribe to real-time updates
+  useEffect(() => {
+    async function loadMood() {
+      const { data } = await supabase
+        .from('mood_logs')
+        .select('mood')
+        .eq('resident_id', residentId)
+        .order('logged_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (data) setCurrentMood(data.mood as Mood)
+    }
+
+    if (residentId) loadMood()
+
+    // Real-time subscription
+    const channel = supabase
+      .channel('mood-changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'mood_logs',
+        filter: `resident_id=eq.${residentId}`,
+      }, (payload) => {
+        setCurrentMood(payload.new.mood as Mood)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [residentId])
+
+  const moodEmoji = currentMood === 'happy' ? '😊'
+    : currentMood === 'okay' ? '😐'
+    : currentMood === 'sad' ? '😔'
+    : '🤍'
+
+  const moodLabel = currentMood
+    ? `Feeling ${currentMood}`
+    : 'No check-in yet today'
+
   return (
     <div className="phone-frame">
       {/* Header */}
-      <Header
-        variant="amber"
-        subtitle="Margaret's dashboard"
-        pill={<LiveBadge />}
-      />
+      <div className="bg-amber px-6 pt-7 pb-5 relative overflow-hidden">
+        <div className="hdr-circle-top" />
+        <div className="hdr-circle-bottom" />
+        <div className="relative z-10 flex items-start justify-between">
+          <div>
+            <h1 className="font-serif text-[32px] font-semibold text-white tracking-tight leading-none">
+              Kinnect.
+            </h1>
+            <p className="text-[12px] text-white/65 italic mt-1">
+              Stay close to those you love
+            </p>
+          </div>
+          <div className="bg-white/[0.15] border border-white/20 text-white text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+            <motion.div
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-2 h-2 rounded-full bg-green-400"
+            />
+            Live
+          </div>
+        </div>
+        <div className="relative z-10 mt-3">
+          <p className="text-[16px] font-bold text-white/90">
+            Margaret's dashboard
+          </p>
+        </div>
+      </div>
 
       {/* Mood status card */}
       <div className="mx-5 mt-5 bg-white rounded-2xl shadow-card flex items-center gap-4 px-5 py-4">
         <motion.div
-          animate={{ y: [0, -5, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          key={currentMood}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           className="text-[44px] flex-shrink-0"
-          aria-label="Margaret is feeling happy"
         >
-          😊
+          {moodEmoji}
         </motion.div>
         <div className="flex-1">
-          <p className="text-[11px] font-extrabold text-muted uppercase tracking-wide">Today's mood</p>
-          <p className="text-[19px] font-extrabold text-ink mt-1">Feeling happy</p>
-          <p className="text-[12px] text-muted mt-0.5">Checked in 2 hours ago</p>
+          <p className="text-[11px] font-extrabold text-muted uppercase tracking-wide">
+            Today's mood
+          </p>
+          <p className="text-[19px] font-extrabold text-ink mt-1">
+            {moodLabel}
+          </p>
+          <p className="text-[12px] text-muted mt-0.5">
+            Updates in real-time
+          </p>
         </div>
-        <div className="bg-green-light text-green text-[11px] font-bold px-3 py-1.5 rounded-full flex-shrink-0">
-          ✓ Notified
-        </div>
+        {currentMood && (
+          <div className="bg-green-light text-green text-[11px] font-bold px-3 py-1.5 rounded-full flex-shrink-0">
+            ✓ Live
+          </div>
+        )}
       </div>
 
       {/* Quick actions */}
       <div className="flex gap-2 px-5 pt-4 pb-2">
-        <QuickBtn emoji="📷" label="Share Photo"  colorClass="bg-teal-light text-teal" onClick={() => {}} />
+        <QuickBtn emoji="📷" label="Share Photo"  colorClass="bg-teal-light text-teal"      onClick={() => {}} />
         <QuickBtn emoji="🎙️" label="Voice Note"  colorClass="bg-amber-light text-amber-dark" onClick={() => {}} />
-        <QuickBtn emoji="📞" label="Call Now"    colorClass="bg-green-light text-green" onClick={() => {}} />
+        <QuickBtn emoji="📞" label="Call Now"    colorClass="bg-green-light text-green"      onClick={() => {}} />
       </div>
 
       {/* Recent activity */}
-      <section className="px-5 pt-3 pb-2" aria-label="Recent activity">
+      <section className="px-5 pt-3 pb-2">
         <p className="sec-title">Recent activity</p>
       </section>
       <div className="mx-5 bg-white border border-black/[0.07] rounded-xl overflow-hidden mb-4">
@@ -95,9 +171,11 @@ export default function FamilyView() {
       </div>
 
       {/* Bottom nav */}
-      <nav className="bot-nav" aria-label="Family navigation">
+      <nav className="bot-nav">
         <div className="nav-item active">
-          <FamHomeIcon /><span className="nav-label">Dashboard</span><div className="nav-dot bg-amber" />
+          <FamHomeIcon />
+          <span className="nav-label">Dashboard</span>
+          <div className="nav-dot bg-amber" />
         </div>
         <div className="nav-item"><GalleryIcon /><span className="nav-label">Gallery</span><div className="nav-dot" /></div>
         <div className="nav-item"><FamMsgIcon /><span className="nav-label">Messages</span><div className="nav-dot" /></div>
@@ -111,7 +189,6 @@ export default function FamilyView() {
   )
 }
 
-// ── Inline SVG nav icons ──────────────────────────────────────────────────────
 const s = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
 function FamHomeIcon() {
   return <svg {...s} stroke="#F4883A"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>

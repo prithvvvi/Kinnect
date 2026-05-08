@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 
-// These come from your .env file (never commit the real values)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
@@ -12,16 +11,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '')
 
-// ── Helper: get current user role ──────────────────────────────────────────
+// ── Get the role of the currently logged in user ──────────────────────────
 export async function getUserRole(): Promise<'resident' | 'family' | 'staff' | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('users')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  return data?.role ?? null
+  if (error || !data) return null
+  return data.role as 'resident' | 'family' | 'staff'
 }

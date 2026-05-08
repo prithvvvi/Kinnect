@@ -1,11 +1,7 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { supabase } from '../../lib/supabase'
 import type { Mood, MoodOption } from '../../types'
-
-interface MoodButtonProps {
-  option: MoodOption
-  selected: boolean
-  onSelect: (mood: Mood) => void
-}
 
 const MOOD_OPTIONS: MoodOption[] = [
   { value: 'happy', emoji: '😊', label: 'Happy' },
@@ -13,7 +9,12 @@ const MOOD_OPTIONS: MoodOption[] = [
   { value: 'sad',   emoji: '😔', label: 'Sad' },
 ]
 
-// ── Single MoodButton ───────────────────────────────────────────────────────
+interface MoodButtonProps {
+  option: MoodOption
+  selected: boolean
+  onSelect: (mood: Mood) => void
+}
+
 function MoodButton({ option, selected, onSelect }: MoodButtonProps) {
   return (
     <motion.button
@@ -31,9 +32,7 @@ function MoodButton({ option, selected, onSelect }: MoodButtonProps) {
         }
       `}
     >
-      <span className="text-3xl leading-none" role="img" aria-hidden="true">
-        {option.emoji}
-      </span>
+      <span className="text-3xl leading-none">{option.emoji}</span>
       <span className={`text-[13px] font-bold ${selected ? 'text-teal' : 'text-ink-2'}`}>
         {option.label}
       </span>
@@ -41,13 +40,59 @@ function MoodButton({ option, selected, onSelect }: MoodButtonProps) {
   )
 }
 
-// ── MoodRow — all 3 buttons + confirmation ──────────────────────────────────
 interface MoodRowProps {
-  selected: Mood | null
-  onSelect: (mood: Mood) => void
+  residentId: string
 }
 
-export default function MoodRow({ selected, onSelect }: MoodRowProps) {
+export default function MoodRow({ residentId }: MoodRowProps) {
+  const [selected, setSelected] = useState<Mood | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  // Load today's mood when component mounts
+  useEffect(() => {
+    async function loadTodaysMood() {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      const { data } = await supabase
+        .from('mood_logs')
+        .select('mood')
+        .eq('resident_id', residentId)
+        .gte('logged_at', today.toISOString())
+        .order('logged_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (data) setSelected(data.mood as Mood)
+    }
+
+    if (residentId) loadTodaysMood()
+  }, [residentId])
+
+  async function handleSelect(mood: Mood) {
+    setSelected(mood)
+    setSaving(true)
+    setSaved(false)
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+const { error } = await supabase
+  .from('mood_logs')
+  .insert({
+    resident_id: user?.id,
+    mood: mood,
+  })
+
+    if (error) {
+      console.error('Error saving mood:', error)
+    } else {
+      setSaved(true)
+    }
+
+    setSaving(false)
+  }
+
   const selectedOption = MOOD_OPTIONS.find(o => o.value === selected)
 
   return (
@@ -58,20 +103,31 @@ export default function MoodRow({ selected, onSelect }: MoodRowProps) {
             key={option.value}
             option={option}
             selected={selected === option.value}
-            onSelect={onSelect}
+            onSelect={handleSelect}
           />
         ))}
       </div>
 
-      {/* Confirmation message */}
-      {selected && selectedOption && (
+      {/* Status message */}
+      {saving && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-3 rounded-lg px-4 py-3 text-[13px] font-bold text-center"
+          style={{ backgroundColor: '#E6F4F4', color: '#1A6B6B' }}
+        >
+          Saving...
+        </motion.div>
+      )}
+
+      {saved && selectedOption && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          className="mt-3 bg-green-light rounded-lg px-4 py-3 text-[13px] font-bold text-green text-center"
+          className="mt-3 rounded-lg px-4 py-3 text-[13px] font-bold text-center"
+          style={{ backgroundColor: '#E8F5EE', color: '#2D7A4F' }}
           role="status"
-          aria-live="polite"
         >
           {selectedOption.emoji}&nbsp;&nbsp;Family notified — feeling {selectedOption.label.toLowerCase()} today.
         </motion.div>

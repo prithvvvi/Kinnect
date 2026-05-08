@@ -1,25 +1,21 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Header from '../components/layout/Header'
 import MoodRow from '../components/shared/MoodRow'
 import VoiceCard from '../components/shared/VoiceCard'
 import CallButton from '../components/shared/CallButton'
-import type { Mood, Photo, VoiceMessage } from '../types'
-
-// ── Static sample data (replaced by Supabase in Phase 3–4) ─────────────────
+import type { Photo, VoiceMessage } from '../types'
 
 const PHOTOS: Photo[] = [
   { id: '1', emoji: '🌳', label: 'Morning walk', gradient: 'from-[#c7f2e8] to-[#9dd9cf]' },
-  { id: '2', emoji: '🍱', label: "Priya's lunch",  gradient: 'from-[#fde8c8] to-[#f9c784]' },
-  { id: '3', emoji: '🎉', label: 'Weekend fun',   gradient: 'from-[#d4e8ff] to-[#a8c8f0]' },
+  { id: '2', emoji: '🍱', label: "Priya's lunch", gradient: 'from-[#fde8c8] to-[#f9c784]' },
+  { id: '3', emoji: '🎉', label: 'Weekend fun',  gradient: 'from-[#d4e8ff] to-[#a8c8f0]' },
 ]
 
 const VOICE_MESSAGES: VoiceMessage[] = [
-  { id: '1', from: 'Daughter — Priya',    preview: '"Mom, we are coming Sunday..."', duration: '0:22' },
-  { id: '2', from: 'Grandson — Arjun',   preview: '"Nani, I got an A in Math!"',    duration: '0:15' },
+  { id: '1', from: 'Daughter — Priya',  preview: '"Mom, we are coming Sunday..."', duration: '0:22' },
+  { id: '2', from: 'Grandson — Arjun', preview: '"Nani, I got an A in Math!"',    duration: '0:15' },
 ]
 
-// ── Photo tile ──────────────────────────────────────────────────────────────
 function PhotoTile({ photo }: { photo: Photo }) {
   return (
     <motion.div
@@ -39,32 +35,11 @@ function PhotoTile({ photo }: { photo: Photo }) {
   )
 }
 
-// ── Quick action button (bottom nav quick-actions) ───────────────────────────
-function QuickAction({ emoji, label, color, onClick }: {
-  emoji: string; label: string; color: string; onClick: () => void
-}) {
-  const [busy, setBusy] = useState(false)
-  function act() {
-    setBusy(true)
-    onClick()
-    setTimeout(() => setBusy(false), 2000)
-  }
-  return (
-    <motion.button
-      whileTap={{ scale: 0.95 }}
-      onClick={act}
-      className={`flex-1 ${color} rounded-xl py-4 flex flex-col items-center gap-2 border-none cursor-pointer`}
-    >
-      <span className="text-2xl">{busy ? '⏳' : emoji}</span>
-      <span className="text-[12px] font-bold">{busy ? 'Opening...' : label}</span>
-    </motion.button>
-  )
+interface ResidentViewProps {
+  userId: string
 }
 
-// ── Main ResidentView ────────────────────────────────────────────────────────
-export default function ResidentView() {
-  const [mood, setMood] = useState<Mood | null>(null)
-
+export default function ResidentView({ userId }: ResidentViewProps) {
   return (
     <div className="phone-frame">
       {/* Header */}
@@ -78,7 +53,7 @@ export default function ResidentView() {
       {/* Mood check-in */}
       <section className="px-5 pb-4" aria-label="Mood check-in">
         <p className="sec-title">How are you feeling today?</p>
-        <MoodRow selected={mood} onSelect={setMood} />
+        <MoodRow residentId={userId} />
       </section>
 
       {/* Today from family */}
@@ -112,12 +87,25 @@ export default function ResidentView() {
       {/* Bottom nav */}
       <nav className="bot-nav" aria-label="Main navigation">
         <div className="nav-item active">
-          <HomeIcon color="#1A6B6B" /><span className="nav-label">Home</span>
+          <HomeIcon color="#1A6B6B" />
+          <span className="nav-label">Home</span>
           <div className="nav-dot bg-teal" />
         </div>
-        <div className="nav-item"><PhotosIcon /><span className="nav-label">Photos</span><div className="nav-dot" /></div>
-        <div className="nav-item"><MsgIcon /><span className="nav-label">Messages</span><div className="nav-dot" /></div>
-        <div className="nav-item"><ProfileIcon /><span className="nav-label">Profile</span><div className="nav-dot" /></div>
+        <div className="nav-item">
+          <PhotosIcon />
+          <span className="nav-label">Photos</span>
+          <div className="nav-dot" />
+        </div>
+        <div className="nav-item">
+          <MsgIcon />
+          <span className="nav-label">Messages</span>
+          <div className="nav-dot" />
+        </div>
+        <div className="nav-item">
+          <ProfileIcon />
+          <span className="nav-label">Profile</span>
+          <div className="nav-dot" />
+        </div>
       </nav>
 
       <footer className="text-center text-[11px] text-muted py-3 border-t border-black/[0.06]">
@@ -127,7 +115,6 @@ export default function ResidentView() {
   )
 }
 
-// ── Inline SVG nav icons ─────────────────────────────────────────────────────
 const s = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: '#9A928A', strokeWidth: 2.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
 function HomeIcon({ color = '#9A928A' }) {
   return <svg {...s} stroke={color}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
