@@ -14,7 +14,7 @@ const viewVariants = {
 }
 
 export default function App() {
-  const [user, setUser] = useState<object | null>(null)
+  const [user, setUser] = useState<{ id: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [showSignup, setShowSignup] = useState(false)
   const [role, setRole] = useState<'resident' | 'family' | 'staff' | null>(null)
@@ -35,6 +35,8 @@ export default function App() {
         if (session?.user) {
           const userRole = await getUserRole()
           setRole(userRole)
+        } else {
+          setRole(null)
         }
       }
     )
@@ -80,8 +82,9 @@ export default function App() {
       {/* Sign out button */}
       <div className="w-full max-w-[480px] flex justify-end mb-4">
         <button
-          onClick={() => {
-            supabase.auth.signOut()
+          onClick={async () => {
+            await supabase.auth.signOut()
+            setUser(null)
             setRole(null)
           }}
           className="text-xs font-semibold px-3 py-1.5 rounded-full border
@@ -102,8 +105,8 @@ export default function App() {
             animate="visible"
             exit="exit"
           >
-            {role === 'resident' && <ResidentView userId={(user as { id: string }).id} />}
-            {role === 'family'   && <FamilyView />}
+            {role === 'resident' && <ResidentView userId={user.id} />}
+            {role === 'family'   && <FamilyView residentId="bb1e8b2d-39bf-463f-9b54-2b8eb9e1b902" />}
             {role === 'staff'    && <StaffView />}
             {!role && (
               <div className="text-center py-20">
