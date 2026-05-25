@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import type { ActivityItem, Mood } from '../types'
@@ -10,15 +10,20 @@ const ACTIVITY: ActivityItem[] = [
   { id:'4', icon:'📖', iconBg:'bg-slate-light', title:'Memory recorded by staff', subtitle:"Margaret's garden story · 1:45", ago:'3d' },
 ]
 
-function QuickBtn({ emoji, label, colorClass, onClick }: {
-  emoji: string; label: string; colorClass: string; onClick: () => void
+function QuickBtn({ emoji, label, colorClass, onClick, disabled }: {
+  emoji: string; label: string; colorClass: string; onClick: () => void; disabled?: boolean
 }) {
   const [busy, setBusy] = useState(false)
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
       whileHover={{ y: -2 }}
-      onClick={() => { setBusy(true); onClick(); setTimeout(() => setBusy(false), 2000) }}
+      onClick={() => {
+        if (disabled) return
+        setBusy(true)
+        onClick()
+        setTimeout(() => setBusy(false), 2000)
+      }}
       className={`flex-1 ${colorClass} rounded-xl py-4 border-none cursor-pointer flex flex-col items-center gap-2`}
     >
       <span className="text-[22px]">{busy ? '⏳' : emoji}</span>
@@ -51,6 +56,9 @@ interface FamilyViewProps {
 
 export default function FamilyView({ residentId }: FamilyViewProps) {
   const [currentMood, setCurrentMood] = useState<Mood | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Load current mood and subscribe to real-time updates
   useEffect(() => {
@@ -85,6 +93,34 @@ export default function FamilyView({ residentId }: FamilyViewProps) {
       supabase.removeChannel(channel)
     }
   }, [residentId])
+
+  // Photo upload
+  function handlePhotoUpload() {
+    fileInputRef.current?.click()
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    setUploadSuccess(false)
+
+    const fileName = `${residentId}/${Date.now()}_${file.name}`
+
+    const { error } = await supabase.storage
+      .from('kinnect-photos')
+      .upload(fileName, file)
+
+    if (error) {
+      console.error('Upload error:', error)
+    } else {
+      setUploadSuccess(true)
+      setTimeout(() => setUploadSuccess(false), 3000)
+    }
+
+    setUploading(false)
+  }
 
   const moodEmoji = currentMood === 'happy' ? '😊'
     : currentMood === 'okay' ? '😐'
@@ -157,10 +193,47 @@ export default function FamilyView({ residentId }: FamilyViewProps) {
 
       {/* Quick actions */}
       <div className="flex gap-2 px-5 pt-4 pb-2">
-        <QuickBtn emoji="📷" label="Share Photo"  colorClass="bg-teal-light text-teal"      onClick={() => {}} />
-        <QuickBtn emoji="🎙️" label="Voice Note"  colorClass="bg-amber-light text-amber-dark" onClick={() => {}} />
-        <QuickBtn emoji="📞" label="Call Now"    colorClass="bg-green-light text-green"      onClick={() => {}} />
+        <QuickBtn
+          emoji={uploading ? '⏳' : '📷'}
+          label={uploading ? 'Uploading...' : 'Share Photo'}
+          colorClass="bg-teal-light text-teal"
+          onClick={handlePhotoUpload}
+          disabled={uploading}
+        />
+        <QuickBtn
+          emoji="🎙️"
+          label="Voice Note"
+          colorClass="bg-amber-light text-amber-dark"
+          onClick={() => {}}
+        />
+        <QuickBtn
+          emoji="📞"
+          label="Call Now"
+          colorClass="bg-green-light text-green"
+          onClick={() => {}}
+        />
       </div>
+
+      {/* Upload status */}
+      {uploadSuccess && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mx-5 mb-2 rounded-xl px-4 py-3 text-[13px] font-bold text-center"
+          style={{ backgroundColor: '#E8F5EE', color: '#2D7A4F' }}
+        >
+          📷 Photo shared with Margaret!
+        </motion.div>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       {/* Recent activity */}
       <section className="px-5 pt-3 pb-2">
