@@ -108,9 +108,16 @@ export default function FamilyView({ residentId }: FamilyViewProps) {
 
     const fileName = `${residentId}/${Date.now()}_${file.name}`
 
-    const { error } = await supabase.storage
+    console.log('Uploading file:', fileName)
+    console.log('File size:', file.size)
+    console.log('Resident ID:', residentId)
+
+    const { data, error } = await supabase.storage
       .from('kinnect-photos')
       .upload(fileName, file)
+
+    console.log('Upload data:', data)
+    console.log('Upload error:', error)
 
     if (error) {
       console.error('Upload error:', error)
