@@ -113,7 +113,7 @@ export default function FamilyView({ residentId }: FamilyViewProps) {
     console.log('Resident ID:', residentId)
 
     const { data, error } = await supabase.storage
-      .from('kinnect-photos')
+      .from('Kinnect-photos')
       .upload(fileName, file)
 
     console.log('Upload data:', data)
