@@ -106,27 +106,32 @@ export default function FamilyView({ residentId }: FamilyViewProps) {
     setUploading(true)
     setUploadSuccess(false)
 
-    const fileName = `${residentId}/${Date.now()}_${file.name}`
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${residentId}/${Date.now()}.${fileExt}`
 
-    console.log('Uploading file:', fileName)
-    console.log('File size:', file.size)
-    console.log('Resident ID:', residentId)
+    try {
+      const { error } = await supabase.storage
+      . from('Kinnect-photos')
+      . upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        })
 
-    const { data, error } = await supabase.storage
-      .from('Kinnect-photos')
-      .upload(fileName, file)
-
-    console.log('Upload data:', data)
-    console.log('Upload error:', error)
-
-    if (error) {
-      console.error('Upload error:', error)
-    } else {
-      setUploadSuccess(true)
-      setTimeout(() => setUploadSuccess(false), 3000)
+      if (error) {
+        console.error('Upload error:', error.message)
+        alert('Upload failed: ' + error.message)
+      } else {
+        setUploadSuccess(true)
+        setTimeout(() => setUploadSuccess(false), 3000)
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err)
+    } finally {
+      setUploading(false)
     }
 
-    setUploading(false)
+    // Reset the input so the same file can be selected again
+    e.target.value = ''
   }
 
   const moodEmoji = currentMood === 'happy' ? '😊'

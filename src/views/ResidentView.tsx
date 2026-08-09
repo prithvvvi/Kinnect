@@ -1,45 +1,53 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Header from '../components/layout/Header'
 import MoodRow from '../components/shared/MoodRow'
 import VoiceCard from '../components/shared/VoiceCard'
 import CallButton from '../components/shared/CallButton'
-import type { Photo, VoiceMessage } from '../types'
-
-const PHOTOS: Photo[] = [
-  { id: '1', emoji: '🌳', label: 'Morning walk', gradient: 'from-[#c7f2e8] to-[#9dd9cf]' },
-  { id: '2', emoji: '🍱', label: "Priya's lunch", gradient: 'from-[#fde8c8] to-[#f9c784]' },
-  { id: '3', emoji: '🎉', label: 'Weekend fun',  gradient: 'from-[#d4e8ff] to-[#a8c8f0]' },
-]
+import { supabase } from '../lib/supabase'
+import type { VoiceMessage } from '../types'
 
 const VOICE_MESSAGES: VoiceMessage[] = [
   { id: '1', from: 'Daughter — Priya',  preview: '"Mom, we are coming Sunday..."', duration: '0:22' },
   { id: '2', from: 'Grandson — Arjun', preview: '"Nani, I got an A in Math!"',    duration: '0:15' },
 ]
 
-function PhotoTile({ photo }: { photo: Photo }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.04 }}
-      whileTap={{ scale: 0.97 }}
-      className={`flex-1 rounded-xl overflow-hidden h-24 relative cursor-pointer bg-gradient-to-br ${photo.gradient}`}
-      role="img"
-      aria-label={photo.label}
-    >
-      <div className="w-full h-full flex items-center justify-center text-3xl">
-        {photo.emoji}
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 bg-black/35 text-white text-[11px] font-bold px-2 py-1">
-        {photo.label}
-      </div>
-    </motion.div>
-  )
-}
-
 interface ResidentViewProps {
   userId: string
 }
 
 export default function ResidentView({ userId }: ResidentViewProps) {
+  const [photos, setPhotos] = useState<string[]>([])
+
+  // Load real photos from Supabase storage
+  useEffect(() => {
+    async function loadPhotos() {
+      const { data, error } = await supabase.storage
+        .from('Kinnect-photos')
+        .list(userId, {
+          limit: 3,
+          sortBy: { column: 'created_at', order: 'desc' },
+        })
+
+      if (error) {
+        console.error('Error loading photos:', error)
+        return
+      }
+
+      if (data) {
+        const urls = data.map(file => {
+          const { data: urlData } = supabase.storage
+            .from('Kinnect-photos')
+            .getPublicUrl(`${userId}/${file.name}`)
+          return urlData.publicUrl
+        })
+        setPhotos(urls)
+      }
+    }
+
+    if (userId) loadPhotos()
+  }, [userId])
+
   return (
     <div className="phone-frame">
       {/* Header */}
@@ -59,9 +67,28 @@ export default function ResidentView({ userId }: ResidentViewProps) {
       {/* Today from family */}
       <section className="px-5 pb-4" aria-label="Photos from your family">
         <p className="sec-title">Today from your family</p>
-        <div className="flex gap-2">
-          {PHOTOS.map(p => <PhotoTile key={p.id} photo={p} />)}
-        </div>
+        {photos.length > 0 ? (
+          <div className="flex gap-2">
+            {photos.map((url, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex-1 rounded-xl overflow-hidden h-24 relative cursor-pointer bg-cream"
+              >
+                <img
+                  src={url}
+                  alt="Family photo"
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-cream border border-black/[0.07] rounded-xl px-4 py-6 text-center">
+            <p className="text-[13px] text-muted">No photos yet — your family will share some soon 💛</p>
+          </div>
+        )}
       </section>
 
       {/* Voice messages */}
@@ -91,21 +118,9 @@ export default function ResidentView({ userId }: ResidentViewProps) {
           <span className="nav-label">Home</span>
           <div className="nav-dot bg-teal" />
         </div>
-        <div className="nav-item">
-          <PhotosIcon />
-          <span className="nav-label">Photos</span>
-          <div className="nav-dot" />
-        </div>
-        <div className="nav-item">
-          <MsgIcon />
-          <span className="nav-label">Messages</span>
-          <div className="nav-dot" />
-        </div>
-        <div className="nav-item">
-          <ProfileIcon />
-          <span className="nav-label">Profile</span>
-          <div className="nav-dot" />
-        </div>
+        <div className="nav-item"><PhotosIcon /><span className="nav-label">Photos</span><div className="nav-dot" /></div>
+        <div className="nav-item"><MsgIcon /><span className="nav-label">Messages</span><div className="nav-dot" /></div>
+        <div className="nav-item"><ProfileIcon /><span className="nav-label">Profile</span><div className="nav-dot" /></div>
       </nav>
 
       <footer className="text-center text-[11px] text-muted py-3 border-t border-black/[0.06]">
